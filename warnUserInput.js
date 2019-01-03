@@ -214,14 +214,7 @@ var finalcheck=function(){
     	alert("还有些东东没搞定呢！");
     return is_done;
 };
-var outputDebug=function(){
-	
-};
-window.onload=function(){
-	var kuan=document.documentElement.clientWidth;
-	var gao=document.documentElement.clientHeight;
-	document.styleSheets[0].cssRules[0].style.left=kuan/2 +"px";
-	
+window.onload=function(){	
 	var AllinputE = document.getElementsByTagName("input");
 	xzzsInit(AllinputE);
 	var AlltextareaE = document.getElementsByTagName("textarea");
