@@ -1,5 +1,7 @@
-var warmingDivCount;
-var xzzsInit=function(limitTarget){
+var warmingDivCount = 0;
+var secondPasswordConfirm = null;
+var passwordTypeCount = 0;
+function xzzsInit(limitTarget){
 	var EleId;
 	for(var i=0,tmpvar; i<limitTarget.length ;i++){
 		//var maxLen=limitTarget[i].getAttribute("maxlength");
@@ -13,11 +15,18 @@ var xzzsInit=function(limitTarget){
 		console.log("process:"+EleId);
 		//alert(limitTarget[i]);
 		var parentOfinputE=xzzsParentNode(limitTarget[i]);
-		
 		if(!parentOfinputE.getAttribute("id"))
 			parentOfinputE.setAttribute("id",EleId+"_"+tmpvar);
 		if(  (limitTarget[i].getAttribute("type")=="text" || limitTarget[i].getAttribute("type")=="password")  )
 		{
+			if( limitTarget[i].getAttribute("type")=="password" ) 
+			{
+				passwordTypeCount++;
+				if(passwordTypeCount == 2)
+				{
+					secondPasswordConfirm = limitTarget[i].getAttribute("id");
+				}
+			}
 			limitTarget[i].addEventListener('focus',xzzsCreate.bind(this,EleId));
 			limitTarget[i].addEventListener('blur',xzzsRemove.bind(this,EleId));
 			limitTarget[i].addEventListener('keyup',xzzs.bind(this,EleId));
@@ -36,89 +45,139 @@ var xzzsInit=function(limitTarget){
 	}
 }
 function xzzsCreate(inputE){
-	var aim = xzzsParentNode(document.getElementById(inputE));
-	/*var aim = inputE;*/
 	var idOfMarkedWords=inputE+'xz';
 	if(document.getElementById(idOfMarkedWords))
+	{
 		return;
+	}
+	var aim = xzzsParentNode(document.getElementById(inputE));
 	console.log("xzzsCreate("+inputE+");Running!");
-	if(aim.tagName=="TR")
+	if(aim.tagName=="TABLE")
+	{
+		var trEle = aim.getElementsByTagName("tr");
+		var childTdCountMax = 0;
+		for(var i=0,tmpCount; i < trEle.length ;i++)
+		{
+			tmpCount = trEle[i].getElementsByTagName("td").length;
+			if(tmpCount > childTdCountMax)
+			{
+				childTdCountMax = tmpCount;
+			}
+		}
+		var inputEleTrNode = document.getElementById(inputE).parentNode ;
+		for(; inputEleTrNode.tagName != "TR" ; inputEleTrNode = inputEleTrNode.parentNode );
 		var markedWords = document.createElement("td");
+		markedWords.setAttribute("id",idOfMarkedWords);
+		markedWords.colSpan = childTdCountMax;
+		markedWords.style.display = "table-cell";
+		markedWords.classList.add("JSinsert");
+		var markedWordsParent = document.createElement("tr");
+		markedWordsParent.setAttribute("id",idOfMarkedWords+"P");
+		markedWordsParent.appendChild(markedWords);
+		/*
+		for(var t=1 ; t < childTdCountMax ; t++)
+		{
+			markedWordsParent.appendChild(document.createElement("td"));
+		}
+		*/
+		insertAfter(markedWordsParent,inputEleTrNode);
+	}
 	else
+	{
 		var markedWords = document.createElement("div");
-	markedWords.setAttribute("id",idOfMarkedWords);
-	markedWords.setAttribute("class","JSinsert");
-	//markedWords.setAttribute("style","display:block;");
-	markedWords.style.display = "block;";
+		markedWords.setAttribute("id",idOfMarkedWords);
+		markedWords.classList.add("JSinsert");
+		markedWords.style.display = "block";
+		aim.appendChild(markedWords);
+	}
 	//markedWords.innerHTML="<br>Worked!";
-	aim.appendChild(markedWords);
 	warmingDivCount++;
 	console.log("xzzsCreate("+inputE+");Done!");
 }
 function xzzsRemove(inputE){
-	var aim = document.getElementById(inputE);
-	/*var aim = inputE;*/
-	var idOfMarkedWords=aim.getAttribute("id")+'xz';
-	
+	console.log("xzzsRemove("+inputE+");Running!");
+	var idOfMarkedWords = document.getElementById(inputE).getAttribute("id") +'xz';
+	var markedWords = document.getElementById(idOfMarkedWords);
 	/* DIY code start*/
 	if(friendlyWarming(inputE)){
-		var markedWords = document.getElementById(idOfMarkedWords);
-		markedWords.style.display="block";
+		xzzsBlockShow(markedWords);
+		/*console.log(entireNode.getAttribute("id"));*/
 		return;
 	}
 	/* DIY code end*/
-	console.log("xzzsRemove("+inputE+");Running!");
-	var parentOfthisnode = xzzsParentNode(aim);
-	var markedWords = document.getElementById(idOfMarkedWords);
-	parentOfthisnode.removeChild(markedWords);
+	xzzsEntireNode(markedWords).parentNode.removeChild(xzzsEntireNode(markedWords));
 	warmingDivCount--;
 	console.log("xzzsRemove("+inputE+");Done!");
 };
-
 function xzzs(inputE){
 	var inputEle = document.getElementById(inputE);
 	/*var inputEle = inputE;*/
 	var idOfMarkedWords=inputE+'xz';
 	var markedWords = document.getElementById(idOfMarkedWords);
 	var maxcharLength;
-	//alert(inputEle);
-	if(inputEle.getAttribute("maxlength")){
+	if(inputEle.getAttribute("maxlength"))
+	{
 		maxcharLength= parseInt(inputEle.getAttribute("maxlength"));
-	}else{
+	}
+	else
+	{
 		maxcharLength=0;
 	}
 	
-	var LenTmp = inputEle.value.length;
+	var lenTmp = inputEle.value.length;
 	//if(markedWords.style.display=="none")
 	//	markedWords.style.display="block";
-	//markedWords.innerText='目前输入的长度为 '+LenTmp;
-	if( LenTmp > (maxcharLength - 6)){
-		if(LenTmp <= maxcharLength && LenTmp >= maxcharLength -5 ){
+	//markedWords.innerText='目前输入的长度为 '+lenTmp;
+	if( lenTmp > (maxcharLength - 6))
+	{
+		if(lenTmp <= maxcharLength && lenTmp >= maxcharLength -5 )
+		{
 			if(markedWords.style.display=="none")
-				markedWords.style.display="block";
-			markedWords.innerText='您还可以继续输入 '+(maxcharLength-LenTmp)+' 个字符';
+			{
+				xzzsBlockShow(markedWords);
+			}
+			markedWords.innerHTML="您还可以继续输入 "+"<span style=\"color:blue;\">"+(maxcharLength-lenTmp)+"</span>"+" 个字符";
 		}
-	}else{
-			markedWords.style.display="none";
+	}
+	else if( lenTmp > (maxcharLength - 6)/4 )
+	{
+		markedWords.innerHTML="您已输入 "+"<span style=\"color:green;\">"+lenTmp+"</span>"+" 个字符";
+	}
+	else
+	{
+		markedWords.style.display="none";
 	}
 };
 function xzzsParentNode(inputE){
-	var child=inputE;
-	var parentEle=child.parentNode;
-	if(parentEle.tagName=="TD")
-		for(parentEle=parentEle.parentNode ; parentEle.tagName != "TR" ; parentEle=parentEle.parentNode );
-	if(parentEle.tagName=="td")
-		for(parentEle=parentEle.parentNode ; parentEle.tagName != "tr" ; parentEle=parentEle.parentNode );
-	/*
-	var tmpvar=document.getElementById("jsDebug");
-	tmpvar.innerHTML=tmpvar.innerHTML+child.tagName+"&nbsp;"+parentEle;
-	if(parentEle)
-		tmpvar.innerHTML=tmpvar.innerHTML+"&nbsp;"+parentEle.tagName;
-	tmpvar.innerHTML=tmpvar.innerHTML+"<br>";
-	*/
-	return parentEle;
-};
-var friendlyWarming=function(inputE){
+	var inputEParent = inputE.parentNode;
+	if(inputEParent.tagName == "TD")
+	{
+		for(inputEParent = inputEParent.parentNode ; inputEParent.tagName != "TABLE" ; inputEParent = inputEParent.parentNode );
+	}
+	return inputEParent;
+}
+function xzzsEntireNode(markedWords){
+	if(markedWords.tagName == "TD")
+	{
+		var aim = markedWords.parentNode;
+	}
+	else
+	{
+		var aim = markedWords;
+	}
+	return aim;
+}
+function xzzsBlockShow(markedWords){
+	if(markedWords.tagName == "TD")
+	{
+		markedWords.style.display = "table-cell";
+	}
+	else
+	{
+		markedWords.style.display = "block";
+	}
+}
+function friendlyWarming(inputE){
 	var aim=document.getElementById(inputE);
 	var idOfMarkedWords=inputE+'xz';
 	var markedWords = document.getElementById(idOfMarkedWords);
@@ -137,9 +196,12 @@ var friendlyWarming=function(inputE){
 			}
 		}
 		else{
-			var minLen=aim.getAttribute("minlength");
-			if(minLen){
-				if(aim.value.length<=minLen){
+			var minLenA=aim.getAttribute("minlength");
+			if(minLenA)
+			{
+				var minLen = parseInt(minLenA);
+				if(aim.value.length <=  minLen)
+				{
 					minLen++;
 					markedWords.innerText='密码长度至少 '+ minLen +' 位！';
 					keepWarming=true;
@@ -181,7 +243,7 @@ function inputLenghtCheck(Target){
 	}
 	return true;
 };
-var finalcheck=function(){
+function finalcheck(){
 	
 	var is_done=true;
 	
@@ -201,6 +263,15 @@ var finalcheck=function(){
 var outputDebug=function(){
 	
 };
+function insertAfter(newElement, targetElement){
+    var parent = targetElement.parentNode;
+    if(parent.lastChild == targetElement){
+        parent.appendChild(newElement);
+    }
+	else{
+        parent.insertBefore(newElement,targetElement.nextSibling);
+    }
+}
 window.onload=function(){
 	var kuan=document.documentElement.clientWidth;
 	var gao=document.documentElement.clientHeight;
@@ -208,13 +279,17 @@ window.onload=function(){
 	
 	
 	var AllinputE = document.getElementsByTagName("input");
+
 	xzzsInit(AllinputE);
 	var AlltextareaE = document.getElementsByTagName("textarea");
 	xzzsInit(AlltextareaE);
 	
-	var passwordRecheckEle=document.getElementById("password2");
-	if(passwordRecheckEle)
-		passwordRecheckEle.setAttribute("compareWithTarget","password");
+	if(secondPasswordConfirm != null)
+	{
+		var passwordRecheckEle=document.getElementById(secondPasswordConfirm);
+		if(passwordRecheckEle)
+			passwordRecheckEle.setAttribute("compareWithTarget","password");
+	}
 	warmingDivCount=0;
 };
 function abc(key){
