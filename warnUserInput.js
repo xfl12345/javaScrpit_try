@@ -157,13 +157,14 @@ function xzzsParentNode(inputE){
 	return inputEParent;
 }
 function xzzsEntireNode(markedWords){
+	var aim;
 	if(markedWords.tagName == "TD")
 	{
-		var aim = markedWords.parentNode;
+		aim = markedWords.parentNode;
 	}
 	else
 	{
-		var aim = markedWords;
+		aim = markedWords;
 	}
 	return aim;
 }
