@@ -1,6 +1,7 @@
 var warmingDivCount = 0;
 var secondPasswordConfirm = null;
 var passwordTypeCount = 0;
+var nickNameCanBeNull = false;
 function xzzsInit(limitTarget){
 	var EleId;
 	for(var i=0,tmpvar; i<limitTarget.length ;i++){
@@ -92,7 +93,7 @@ function xzzsCreate(inputE){
 	}
 	//markedWords.innerHTML="<br>Worked!";
 	warmingDivCount++;
-	console.log("xzzsCreate("+inputE+");Done!");
+	console.log("xzzsCreate("+inputE+");Done!\nWDC:"+warmingDivCount+"\n");
 }
 function xzzsRemove(inputE){
 	console.log("xzzsRemove("+inputE+");Running!");
@@ -102,12 +103,13 @@ function xzzsRemove(inputE){
 	if(friendlyWarming(inputE)){
 		xzzsBlockShow(markedWords);
 		/*console.log(entireNode.getAttribute("id"));*/
+		console.log("xzzsRemove("+inputE+");exit!");
 		return;
 	}
 	/* DIY code end*/
 	xzzsEntireNode(markedWords).parentNode.removeChild(xzzsEntireNode(markedWords));
 	warmingDivCount--;
-	console.log("xzzsRemove("+inputE+");Done!");
+	console.log("xzzsRemove("+inputE+");Done!\nWDC:"+warmingDivCount+"\n");
 };
 function xzzs(inputE){
 	var inputEle = document.getElementById(inputE);
@@ -196,33 +198,35 @@ function friendlyWarming(inputE){
 				keepWarming=true;
 			}
 		}
-		else{
-			var minLenA=aim.getAttribute("minlength");
-			if(minLenA)
-			{
-				var minLen = parseInt(minLenA);
-				if(aim.value.length <=  minLen)
-				{
-					minLen++;
-					markedWords.innerText='密码长度至少 '+ minLen +' 位！';
-					keepWarming=true;
-				}
-			}
-		}
 	}
 	if(typeOfEle == typeString2){
-		if(inputE == 'userName'){
+		if(inputE == 'nickName'){
+			if(!nickNameCanBeNull && aim.value.length<1){
+				markedWords.innerText='昵称别漏了哦！';
+				keepWarming=true;
+			}
+		}else if(inputE == 'userName'){
 			if(aim.value.length<1){
 				markedWords.innerText='用户名别漏了哦！';
 				keepWarming=true;
 			}
-		}
-		if(inputE == 'email'){
+		}else if(inputE == 'email'){
 			if(aim.value.length<1){
 				markedWords.innerText='邮箱地址别漏了哦！';
 				keepWarming=true;
 			}else if(!isEmail(aim.value)){
 				markedWords.innerText='请重新输入一个合法的邮箱地址！';
+				keepWarming=true;
+			}
+		}
+	}
+	if(!keepWarming){
+		var minLenA=aim.getAttribute("minlength");
+		if(minLenA){
+			var minLen = parseInt(minLenA);
+			if(aim.value.length <=  minLen){
+				minLen++;
+				markedWords.innerText='长度至少 '+ minLen +' 位！';
 				keepWarming=true;
 			}
 		}
@@ -233,32 +237,69 @@ function isEmail(str){
 	var reg = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/; 
 	return reg.test(str); 
 };
-function inputLenghtCheck(Target){
-	for(var i=0,tmpvar; i<Target.length ;i++){
-		if(Target.value==null){
-			return false;
-		}else{
-			if(Target.value.length<=1)
-				return false;
+function inputUnfinishCount(target){
+	var count=0;
+	for(var i=0,tmpvar; i<target.length ;i++)
+	{
+		if(  target[i].getAttribute("type")=="text" ||
+		     target[i].getAttribute("type")=="password"  )
+		if(target[i].value == null)
+		{
+			count++;
 		}
+		else if(target[i].value.length<=1)
+		{
+			count++;
+		}
+	}
+	return count;
+};
+function inputLenghtCheck(target){
+	if(target.value==null)
+	{
+		return false;
+	}
+	else if(target.value.length<=1)
+	{
+		return false;
 	}
 	return true;
 };
 function finalcheck(){
-	
 	var is_done=true;
 	
-	if(warmingDivCount>0){
+	if(warmingDivCount>0)
+	{
 		is_done=false;
 	}
-	else{
+	else
+	{
 		var AllinputE = document.getElementsByTagName("input");
 		var AlltextareaE = document.getElementsByTagName("textarea");
-		if( !(inputLenghtCheck(AllinputE)&&inputLenghtCheck(AlltextareaE)) )
-			is_done=false;
+		var inputEleUnfinishCount = inputUnfinishCount(AllinputE);
+		console.log("finalcheck:unfinishCount="+inputEleUnfinishCount);
+		if( inputUnfinishCount(AlltextareaE) > 0 )
+		{
+			is_done = false;
+		}
+		else if( inputEleUnfinishCount <= 1)
+		{
+			is_done = false;
+			if(inputEleUnfinishCount == 1 && nickNameCanBeNull)
+			{
+				var nicknameEle = document.getElementById("nickName");
+				if(nicknameEle)
+				{
+					if( !inputLenghtCheck(nicknameEle)) 
+					{
+						is_done = true;
+					}
+				}
+			}
+		}
 	}
     if(!is_done)
-    	alert("还有些东东没搞定呢！");
+		alert("还有些东东没搞定呢！");
     return is_done;
 };
 var outputDebug=function(){
@@ -274,25 +315,3 @@ function insertAfter(newElement, targetElement){
     }
 }
 window.onload=function(){
-	var kuan=document.documentElement.clientWidth;
-	var gao=document.documentElement.clientHeight;
-	document.styleSheets[0].cssRules[0].style.left=kuan/2 +"px";
-	
-	
-	var AllinputE = document.getElementsByTagName("input");
-
-	xzzsInit(AllinputE);
-	var AlltextareaE = document.getElementsByTagName("textarea");
-	xzzsInit(AlltextareaE);
-	
-	if(secondPasswordConfirm != null)
-	{
-		var passwordRecheckEle=document.getElementById(secondPasswordConfirm);
-		if(passwordRecheckEle)
-			passwordRecheckEle.setAttribute("compareWithTarget","password");
-	}
-	warmingDivCount=0;
-};
-function abc(key){
-    console.log(key);
-}
