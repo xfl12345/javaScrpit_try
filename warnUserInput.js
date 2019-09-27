@@ -302,9 +302,6 @@ function finalcheck(){
 		alert("还有些东东没搞定呢！");
     return is_done;
 };
-var outputDebug=function(){
-	
-};
 function insertAfter(newElement, targetElement){
     var parent = targetElement.parentNode;
     if(parent.lastChild == targetElement){
@@ -315,3 +312,23 @@ function insertAfter(newElement, targetElement){
     }
 }
 window.onload=function(){
+	/*
+	var kuan=document.documentElement.clientWidth;
+	var gao=document.documentElement.clientHeight;
+	document.styleSheets[0].cssRules[0].style.left=kuan/2 +"px";
+	*/
+	
+	var AllinputE = document.getElementsByTagName("input");
+
+	xzzsInit(AllinputE);
+	var AlltextareaE = document.getElementsByTagName("textarea");
+	xzzsInit(AlltextareaE);
+	
+	if(secondPasswordConfirm != null)
+	{
+		var passwordRecheckEle=document.getElementById(secondPasswordConfirm);
+		if(passwordRecheckEle)
+			passwordRecheckEle.setAttribute("compareWithTarget","password");
+	}
+	warmingDivCount=0;
+};
